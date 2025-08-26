@@ -1,22 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { SqsService } from "src/shared/aws/sqs.service";
-import { AppointmentRepository } from "../domain/repositories/appointment.repository";
-import { AppointmentEntity } from "../domain/entities/appointment.entity";
+import { ClAppointmentRepository } from "../domain/repository/cl-appointment.repository";
+import { AppointmentChileEntity } from "../domain/entities/appointment-chile.entity";
 
 @Injectable()
-export class PeruTopicAppoitmentUseCase {
+export class ClCreateTopicAppoitmentUseCase {
     constructor(
-        private readonly sqsService: SqsService,
-        @Inject('AppointmentRepository')
-        private readonly appointmentRepository: AppointmentRepository,
+        @Inject('PeAppointmentRepository')
+        private readonly appointmentRepository: ClAppointmentRepository,
     ) { }
 
-    async peruTopicAppointment(event: any) {
+    async chileTopicAppointment(event: any) {
         try {
 
             const { data } = event;
-
-            const appointment: Partial<AppointmentEntity> = {
+            const appointment: Partial<AppointmentChileEntity> = {
                 countryIso: data.countryISO,
                 appointmentId: data.appointmentId,
                 insuredId: data.insuredId,
@@ -31,7 +28,6 @@ export class PeruTopicAppoitmentUseCase {
             }
 
             console.log("Cita: ", appointment)
-
 
         } catch (error) {
             throw new Error(error.message)

@@ -1,21 +1,20 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CreateAppointmentDto } from "../domain/dto/create-appointment.dto";
-import { AppointmentRepository } from "../domain/repositories/appointment.repository";
-import { AppointmentDynamoDSRepository } from "../infraestructure/data-source/appointment-dynamo.repository";
 import { AppointmentDynamoItem } from "../domain/entities/appointment-dynamo-item";
 import { ulid } from "ulid";
 import { SnsService } from "src/shared/aws/sns.service";
+import { AppointmentDynamoRepository } from "../domain/repositories/appointment-dynamo.repository";
+import { SNS_TOPIC_ARN } from "src/shared/constants/connection.constant";
 
 @Injectable()
 export class CreateAppoitmentUseCase {
 
-    private readonly topicArn = process.env.SNS_TOPIC_ARN!;
+    private readonly topicArn = SNS_TOPIC_ARN ?? process.env.SNS_TOPIC_ARN!;
 
 
     constructor(
-        @Inject('AppointmentRepository')
-        private readonly appointmentRepository: AppointmentRepository,
-        private readonly appointmentDynamoRepository: AppointmentDynamoDSRepository,
+        @Inject('AppointmentDynamoRepository')
+        private readonly appointmentDynamoRepository: AppointmentDynamoRepository,
         private readonly snsService: SnsService,
 
     ) { }
@@ -49,6 +48,7 @@ export class CreateAppoitmentUseCase {
                 countryISO: appointmentCreated.countryISO,
                 status: appointmentCreated.status,
                 createdAt: appointmentCreated.createdAt,
+                
             }, this.topicArn);
 
             return {

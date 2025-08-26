@@ -16,11 +16,18 @@ custom:
       #apiRootResourceId: osrrozh0c3
       #deployBucket: omnichannel-dev-lambda
       env:
-        DB_HOST: ${env:DB_HOST}
         DB_PORT: ${env:DB_PORT, '3306'}
-        DB_USERNAME: ${env:DB_USERNAME}
-        DB_PASSWORD: ${env:DB_PASSWORD}
-        DB_NAME: ${env:DB_NAME}
+
+        PE_DB_HOST: ${env:PE_DB_HOST}
+        PE_DB_USERNAME: ${env:PE_DB_USERNAME}
+        PE_DB_PASSWORD: ${env:PE_DB_PASSWORD}
+        PE_DB_NAME: ${env:PE_DB_NAME}
+
+        CL_DB_HOST: ${env:CL_DB_HOST}
+        CL_DB_USERNAME: ${env:CL_DB_USERNAME}
+        CL_DB_PASSWORD: ${env:CL_DB_PASSWORD}
+        CL_DB_NAME: ${env:CL_DB_NAME}
+
         APP_REGION: ${env:APP_REGION, 'us-east-2'}
         APPOINTMENT_TABLE_NAME: appointment
         SNS_TOPIC_ARN: arn:aws:sns:us-east-2:893048189186:appointment-scheduling-topic
@@ -62,6 +69,7 @@ provider:
             - sns:Publish
             - sqs:GetQueueUrl
             - sqs:SendMessage
+            - events:PutEvents
           Resource:
             - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic
             - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic-${self:custom.stage}            
@@ -69,6 +77,7 @@ provider:
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}/index/*
             - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-peru
             - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-chile
+            - arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/default
   #deploymentBucket:
   #  name: ${self:custom.settings.${self:custom.stage}.deployBucket}
   #  serverSideEncryption: AES256
@@ -111,8 +120,18 @@ functions:
             Fn::GetAtt:
               - AppointmentQueueChile
               - Arn
-          batchSize: 3 
-
+          batchSize: 3
+  
+  confirm-appointment:
+    handler: dist/serverless.confirmAppointmentHandler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - ConfirmTopicAppointmentQueue
+              - Arn
+          batchSize: 3
+  
 resources:
   Resources:
 
@@ -157,5 +176,57 @@ resources:
     AppointmentDeadLetterQueueChile:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: rimac-api-appointment-queue-chile-v2
+        QueueName: rimac-api-appointment-queue-chile-dlq
         VisibilityTimeout: 130
+
+###############################################
+           #SQS Topic Chile
+###############################################
+
+    ConfirmTopicAppointmentQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-confirm-appointment-queue
+        VisibilityTimeout: 130
+        MessageRetentionPeriod: 345600
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ConfirmTopicAppointmentDeadLetterQueue.Arn
+          maxReceiveCount: 3
+
+    ConfirmTopicAppointmentDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-confirm-appointment-queue-dlq
+        VisibilityTimeout: 130
+
+#############################################
+      # Event Bridge de COnfirmación
+###########################################
+    EventToAppointmentRule:
+      Type: AWS::Events::Rule
+      Properties:
+        EventPattern:
+          source:
+            - "appointment.completed"
+          detail-type:
+            - "AppointmentCompleted"
+        Targets:
+          - Arn: !GetAtt ConfirmTopicAppointmentQueue.Arn
+            Id: "SendToAppointmentQueue"
+#############################################
+    ###  Permisos para que EventBridge pueda publicar en la cola SQS
+###########################################
+
+    AllowEventBridgeToSQS:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref ConfirmTopicAppointmentQueue
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: events.amazonaws.com
+              Action: "sqs:SendMessage"
+              Resource: !GetAtt ConfirmTopicAppointmentQueue.Arn

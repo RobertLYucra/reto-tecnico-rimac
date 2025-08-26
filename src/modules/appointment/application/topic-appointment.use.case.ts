@@ -27,7 +27,7 @@ export class TopicAppoitmentUseCase {
                     throw new Error(`País no soportado: ${countryISO}`);
             }
 
-            await this.sqsService.sendMessage(snsMessage, 'rimac-api-appointment-queue-peru');
+            await this.sqsService.sendMessage(snsMessage, queueName);
             console.log(`Mensaje enviado a la cola ${queueName}`);
 
         } catch (error) {

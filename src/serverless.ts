@@ -7,7 +7,7 @@ import { Handler } from 'aws-lambda';
 import { HttpExceptionFilter } from './shared/middlewares/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TopicAppoitmentUseCase } from './modules/appointment/application/topic-appointment.use.case';
-import { PeruTopicAppoitmentUseCase } from './modules/appointment/application/peru-topic-appointment.use.case';
+import { PeCreateTopicAppoitmentUseCase } from './modules/appointment-pe/application/peru-create-topic-appointment.use.case';
 
 
 let server: Handler;
@@ -70,7 +70,7 @@ export const appointmentTopic: Handler = async (event) => {
 
 export const peruTopicAppointmentHandler: Handler = async (event: any) => {
   const appContext = await NestFactory.create(AppModule, { logger: false });
-  const eventService = appContext.get(PeruTopicAppoitmentUseCase);
+  const eventService = appContext.get(PeCreateTopicAppoitmentUseCase);
 
   try {
     for (const record of event.Records) {
@@ -90,7 +90,9 @@ export const peruTopicAppointmentHandler: Handler = async (event: any) => {
 };
 
 
-export const chileTopicAppointmentHandler: Handler = async (event: any) => {
+
+
+/* export const chileTopicAppointmentHandler: Handler = async (event: any) => {
   const appContext = await NestFactory.create(AppModule, { logger: false });
   const eventService = appContext.get(PeruTopicAppoitmentUseCase);
 
@@ -109,4 +111,14 @@ export const chileTopicAppointmentHandler: Handler = async (event: any) => {
   }
 
   return { statusCode: 200, body: 'Processed all records' };
-};
+}; */
+
+export const confirmAppointmentHandler: Handler = async (event) => {
+  const appContext = await NestFactory.create(AppModule, { logger: false });
+  const eventService = appContext.get(TopicAppoitmentUseCase);
+
+  const record = event.Records[0];
+  const snsMessage = JSON.parse(record.Sns.Message);
+
+  return eventService.topicAppointment(snsMessage);
+}
