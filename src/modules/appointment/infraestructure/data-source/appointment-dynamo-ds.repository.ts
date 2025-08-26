@@ -47,11 +47,7 @@ export class AppointmentDynamoDSRepository implements AppointmentDynamoRepositor
         return item;
     }
 
-    async updateAppointmentDynamo(
-        pk: string,
-        sk: string,
-        updateData: Partial<AppointmentDynamoItem>
-    ): Promise<AppointmentDynamoItem> {
+    async updateAppointmentDynamo(pk: string, sk: string, updateData: Partial<AppointmentDynamoItem>): Promise<AppointmentDynamoItem> {
         try {
             // Remover PK y SK del updateData
             const { PK, SK, ...dataToUpdate } = updateData;
