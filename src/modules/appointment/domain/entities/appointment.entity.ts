@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index, UpdateDateColumn } from 'typeorm';
 
 @Entity('appointments')
 export class AppointmentEntity {
@@ -16,8 +16,14 @@ export class AppointmentEntity {
   scheduleId: number;
 
   @Column({ name: 'country_iso', type: 'char', length: 2 })
-  countryIso: 'PE' | 'CL';
+  countryIso: 'PE' | 'CL' | string;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'datetime' })
+  updatedAt: Date;
+
+  @Column({ name: "deleted", default: false })
+  deleted: boolean
 }

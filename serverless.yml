@@ -1,4 +1,4 @@
-service: omnexa-platform-auth-service
+service: rimac-api-appointment
 frameworkVersion: '4'
 
 plugins:
@@ -12,29 +12,24 @@ custom:
   settings:
     test:
       region: us-east-2
-      #apiId: jooki0528l
-      #apiRootResourceId: iftwtqaqh9
-      deployBucket: omnichannel-dev-lambda
+      #apiId: swti23y871
+      #apiRootResourceId: osrrozh0c3
+      #deployBucket: omnichannel-dev-lambda
       env:
-         DB_HOST: ${env:DB_HOST}
-         DB_PORT: ${env:DB_PORT, '3306'}
-         DB_USERNAME: ${env:DB_USERNAME}
-         DB_PASSWORD: ${env:DB_PASSWORD}
-         DB_NAME: ${env:DB_NAME}
-         SNAP_REGION: ${env:SNAP_REGION, 'us-east-2'}
-         SNAP_BUCKET: ${env:SNAP_BUCKET}
+        DB_HOST: ${env:DB_HOST}
+        DB_PORT: ${env:DB_PORT, '3306'}
+        DB_USERNAME: ${env:DB_USERNAME}
+        DB_PASSWORD: ${env:DB_PASSWORD}
+        DB_NAME: ${env:DB_NAME}
+        APP_REGION: ${env:APP_REGION, 'us-east-2'}
+        APPOINTMENT_TABLE_NAME: appointment
+        SNS_TOPIC_ARN: arn:aws:sns:us-east-2:893048189186:appointment-scheduling-topic
 
-        #PUSHER_APP_ID: ${ssm:snap-api-mailing-pusher-app-id}
-        #PUSHER_KEY: ${ssm:snap-api-mailing-pusher-key}
-        #PUSHER_SECRET: ${ssm:snap-api-mailing-pusher-secret}
-        #PUSHER_CLUSTER: ${ssm:snap-api-mailing-pusher-cluster}
   esbuild:
     bundle: true
     minify: true
     sourcemap: false
     platform: node
-   
-      
     exclude:
       - aws-sdk
     target: node18
@@ -42,7 +37,6 @@ custom:
     external:
       - '@nestjs/microservices'
       - '@nestjs/websockets'
-      - cache-manager
       - class-transformer
     keepNames: true
     metafile: false
@@ -57,19 +51,31 @@ provider:
   timeout: 120
   region: ${self:custom.settings.${self:custom.stage}.region}
   iam:
-    role: arn:aws:iam::319643186591:role/omnichannel-lambda-access-desa-role
-  deploymentBucket:
-    name: ${self:custom.settings.${self:custom.stage}.deployBucket}
-    serverSideEncryption: AES256
+   role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - sns:Publish
+            - sqs:GetQueueUrl
+            - sqs:SendMessage
+          Resource:
+            - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic
+            - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic-${self:custom.stage}            
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}/index/*
+            - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-peru
+            - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-chile
+  #deploymentBucket:
+  #  name: ${self:custom.settings.${self:custom.stage}.deployBucket}
+  #  serverSideEncryption: AES256
   #apiGateway:
-  #  restApiId: ${self:custom.settings.${self:custom.stage}.apiId}
-  #  restApiRootResourceId: ${self:custom.settings.${self:custom.stage}.apiRootResourceId}
+    #restApiId: ${self:custom.settings.${self:custom.stage}.apiId}
+    #restApiRootResourceId: ${self:custom.settings.${self:custom.stage}.apiRootResourceId}
   environment: ${self:custom.settings.${self:custom.stage}.env}
-  stackTags:
-    MODULE: platform
-    TASK: platform
-    ENVIRONMENT: test
-    PLATFORM: omnexa
 
 functions:
   api:
@@ -79,4 +85,77 @@ functions:
           method: ANY
           path: 'api-appointment/{proxy+}'
           cors: true
+          
+  appointment-topic:
+    handler: dist/serverless.appointmentTopic
+    events:
+      - sns: ${self:custom.settings.${self:custom.stage}.env.SNS_TOPIC_ARN}
 
+  topic-appointment_pe:
+    handler: dist/serverless.peruTopicAppointmentHandler
+    timeout: 120 
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - AppointmentQueuePeru
+              - Arn
+          batchSize: 3 
+
+  topic-appointment_cl:
+    handler: dist/serverless.chileTopicAppointmentHandler
+    timeout: 120 
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - AppointmentQueueChile
+              - Arn
+          batchSize: 3 
+
+resources:
+  Resources:
+
+    #AppointmentTopic:
+    #  Type: AWS::SNS::Topic
+    #  Properties:
+    #    TopicName: appointment-scheduling-topic-${self:custom.stage}
+
+################################################
+#           #SQS Topic Perú
+################################################
+    AppointmentQueuePeru:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-appointment-queue-peru
+        VisibilityTimeout: 130
+        MessageRetentionPeriod: 345600
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt AppointmentDeadLetterQueuePeru.Arn
+          maxReceiveCount: 3
+
+    AppointmentDeadLetterQueuePeru:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-appointment-queue-peru-v2
+        VisibilityTimeout: 130
+
+###############################################
+           #SQS Topic Chile
+###############################################
+
+    AppointmentQueueChile:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-appointment-queue-chile
+        VisibilityTimeout: 130
+        MessageRetentionPeriod: 345600
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt AppointmentDeadLetterQueueChile.Arn
+          maxReceiveCount: 3
+
+    AppointmentDeadLetterQueueChile:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rimac-api-appointment-queue-chile-v2
+        VisibilityTimeout: 130

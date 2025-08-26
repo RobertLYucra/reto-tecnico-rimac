@@ -6,6 +6,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { Handler } from 'aws-lambda';
 import { HttpExceptionFilter } from './shared/middlewares/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { TopicAppoitmentUseCase } from './modules/appointment/application/topic-appointment.use.case';
+import { PeruTopicAppoitmentUseCase } from './modules/appointment/application/peru-topic-appointment.use.case';
 
 
 let server: Handler;
@@ -26,8 +28,8 @@ async function bootstrap() {
     .setDescription('Report, Dashboards, etc')
     .setVersion('1.0')
     .addTag('analytics')
-    .addServer("http://localhost:3000/test/api-platform-auth")
-    .addServer('https://jooki0528l.execute-api.us-east-2.amazonaws.com/test/api-mailing-analytics')
+    .addServer("http://localhost:3000/test/api-appointment")
+    .addServer('https://swti23y871.execute-api.us-east-2.amazonaws.com/test/api-appointment')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -53,4 +55,58 @@ async function bootstrap() {
 export const handler: Handler = async (event: any, context, callback) => {
   server = server ?? (await bootstrap());
   return server(event, context, callback);
+};
+
+export const appointmentTopic: Handler = async (event) => {
+  const appContext = await NestFactory.create(AppModule, { logger: false });
+  const eventService = appContext.get(TopicAppoitmentUseCase);
+
+  const record = event.Records[0];
+  const snsMessage = JSON.parse(record.Sns.Message);
+
+  return eventService.topicAppointment(snsMessage);
+};
+
+
+export const peruTopicAppointmentHandler: Handler = async (event: any) => {
+  const appContext = await NestFactory.create(AppModule, { logger: false });
+  const eventService = appContext.get(PeruTopicAppoitmentUseCase);
+
+  try {
+    for (const record of event.Records) {
+      try {
+        const payload = JSON.parse(record.body);
+        await eventService.peruTopicAppointment(payload);
+      } catch (error) {
+        console.error('Error procesando mensaje del batch:', error.message, record.body);
+      }
+    }
+  } finally {
+    // Libera recursos
+    await appContext.close();
+  }
+
+  return { statusCode: 200, body: 'Processed all records' };
+};
+
+
+export const chileTopicAppointmentHandler: Handler = async (event: any) => {
+  const appContext = await NestFactory.create(AppModule, { logger: false });
+  const eventService = appContext.get(PeruTopicAppoitmentUseCase);
+
+  try {
+    for (const record of event.Records) {
+      try {
+        const payload = JSON.parse(record.body);
+        await eventService.peruTopicAppointment(payload);
+      } catch (error) {
+        console.error('Error procesando mensaje del batch:', error.message, record.body);
+      }
+    }
+  } finally {
+    // Libera recursos
+    await appContext.close();
+  }
+
+  return { statusCode: 200, body: 'Processed all records' };
 };
