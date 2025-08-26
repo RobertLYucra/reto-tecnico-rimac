@@ -5,6 +5,9 @@ import { ulid } from "ulid";
 import { SnsService } from "src/shared/aws/sns.service";
 import { AppointmentDynamoRepository } from "../domain/repositories/appointment-dynamo.repository";
 import { SNS_TOPIC_ARN } from "src/shared/constants/connection.constant";
+import { GetPeTopicAppoitmentUseCase } from "src/modules/appointment-peru/application/get-peru-appointments.use.case";
+import { AppointmentResponseDto } from "../domain/dto/response/appointment.response.dto";
+import { AppointmentMapping as AppointmentMapping } from "./mapping/appointment.mapping";
 
 @Injectable()
 export class CreateAppoitmentUseCase {
@@ -16,14 +19,18 @@ export class CreateAppoitmentUseCase {
         @Inject('AppointmentDynamoRepository')
         private readonly appointmentDynamoRepository: AppointmentDynamoRepository,
         private readonly snsService: SnsService,
-
+        private readonly getPeTopicAppoitmentUseCase: GetPeTopicAppoitmentUseCase
     ) { }
 
-    async createAppointment(appointmentParams: CreateAppointmentDto): Promise<any> {
+    async createAppointment(appointmentParams: CreateAppointmentDto): Promise<AppointmentResponseDto> {
         try {
-            // return await this.appointmentDynamoRepository.findAll()
+
+            const scheduleFound = await this.getPeTopicAppoitmentUseCase.getPeruTopicAppointmentById(+appointmentParams.scheduleId)
+            if (!scheduleFound) throw new Error("Programación no existe o fue eliminado")
+
             const now = new Date().toISOString();
 
+            //Armando la estrucutura de Appointment
             const item: AppointmentDynamoItem = {
                 PK: `INSURED#${appointmentParams.insuredId}`,
                 SK: `APPT#${appointmentParams.scheduleId}`,
@@ -34,6 +41,12 @@ export class CreateAppoitmentUseCase {
                 status: 'PENDING',
                 createdAt: now,
                 updatedAt: now,
+                centerId: scheduleFound.centerId,
+                dateSchedule: scheduleFound.date instanceof Date
+                    ? scheduleFound.date.toISOString()
+                    : String(scheduleFound.date),
+                medicId: scheduleFound.medicId,
+                specialtyId: scheduleFound.specialtyId
             };
 
 
@@ -48,17 +61,12 @@ export class CreateAppoitmentUseCase {
                 countryISO: appointmentCreated.countryISO,
                 status: appointmentCreated.status,
                 createdAt: appointmentCreated.createdAt,
-                
+                PK: appointmentCreated.PK,
+                SK: appointmentCreated.SK
             }, this.topicArn);
 
-            return {
-                message: 'Appointment accepted and is being processed',
-                id: appointmentCreated.appointmentId,
-                insuredId: appointmentCreated.insuredId,
-                scheduleId: appointmentCreated.scheduleId,
-                status: appointmentCreated.status,
-                createdAt: appointmentCreated.createdAt,
-            };
+            //Armando la estrucutura de Response Appointment
+            return AppointmentMapping(appointmentCreated)
 
         } catch (error) {
             throw new Error(error.message)

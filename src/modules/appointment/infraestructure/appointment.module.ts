@@ -6,11 +6,14 @@ import { AppointmentDynamoDSRepository } from "./data-source/appointment-dynamo-
 import { SqsService } from "src/shared/aws/sqs.service";
 import { SnsService } from "src/shared/aws/sns.service";
 import { TopicAppoitmentUseCase } from "../application/topic-appointment.use.case";
+import { UpdateAppoitmentUseCase } from "../application/update-appointment.usecase";
+import { AppoitmentPEModule } from "src/modules/appointment-peru/infraestructure/appointment-pe.module";
+import { GetAppointmentUseCase } from "../application/get-appointment.use.case";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([]),
-
+        AppoitmentPEModule
     ],
     controllers: [AppointmentController],
     providers: [
@@ -23,7 +26,8 @@ import { TopicAppoitmentUseCase } from "../application/topic-appointment.use.cas
         SnsService,
         SqsService,
         TopicAppoitmentUseCase,
-
+        UpdateAppoitmentUseCase,
+        GetAppointmentUseCase
     ],
     exports: [TypeOrmModule],
 })

@@ -13,9 +13,10 @@ export interface AppointmentDynamoItem {
   updatedAt: string;        // ISO
 
   // Extras opcionales (auditoría/UX)
-  clinicId?: string;
-  specialtyId?: string;
-  doctorId?: string;
+  specialtyId?: number;
   slot?: { date: string; start: string; end: string };
   notes?: string;
+  medicId: number;
+  centerId: number
+  dateSchedule: string
 }

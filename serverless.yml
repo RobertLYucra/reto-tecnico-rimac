@@ -30,7 +30,8 @@ custom:
 
         APP_REGION: ${env:APP_REGION, 'us-east-2'}
         APPOINTMENT_TABLE_NAME: appointment
-        SNS_TOPIC_ARN: arn:aws:sns:us-east-2:893048189186:appointment-scheduling-topic
+        #SNS_TOPIC_ARN: arn:aws:sns:us-east-2:893048189186:appointment-scheduling-topic
+        SNS_TOPIC_ARN: !Ref AppointmentTopic
 
   esbuild:
     bundle: true
@@ -66,18 +67,28 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:GetItem
             - dynamodb:Query
+            - dynamodb:Scan
             - sns:Publish
             - sqs:GetQueueUrl
             - sqs:SendMessage
             - events:PutEvents
+            - sqs:GetQueueUrl
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            
           Resource:
             - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic
             - arn:aws:sns:${self:provider.region}:${aws:accountId}:appointment-scheduling-topic-${self:custom.stage}            
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}/index/*
+           # - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}
+            #- arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.APPOINTMENT_TABLE_NAME}/index/*
             - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-peru
             - arn:aws:sqs:${self:provider.region}:${aws:accountId}:rimac-api-appointment-queue-chile
             - arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/default
+            - !GetAtt AppointmentTable.Arn                  # tabla
+            - !Sub '${AppointmentTable.Arn}/index/*'
+            - !Ref AppointmentTopic
   #deploymentBucket:
   #  name: ${self:custom.settings.${self:custom.stage}.deployBucket}
   #  serverSideEncryption: AES256
@@ -94,11 +105,18 @@ functions:
           method: ANY
           path: 'api-appointment/{proxy+}'
           cors: true
-          
+
+  
+  #Logica para ejecutar SQS de Peru o Chile
+   
   appointment-topic:
     handler: dist/serverless.appointmentTopic
     events:
-      - sns: ${self:custom.settings.${self:custom.stage}.env.SNS_TOPIC_ARN}
+      - sns:
+          arn:
+            Ref: AppointmentTopic
+          topicName: appointment-scheduling-topic-${self:custom.stage}
+  #Registrar en la base de Datos en Ambiente Peru
 
   topic-appointment_pe:
     handler: dist/serverless.peruTopicAppointmentHandler
@@ -111,6 +129,8 @@ functions:
               - Arn
           batchSize: 3 
 
+  #Registrar en la base de Datos en Ambiente Chile
+
   topic-appointment_cl:
     handler: dist/serverless.chileTopicAppointmentHandler
     timeout: 120 
@@ -122,27 +142,42 @@ functions:
               - Arn
           batchSize: 3
   
+  #Actualizar estado en DynamoDb
   confirm-appointment:
     handler: dist/serverless.confirmAppointmentHandler
+    timeout: 120
     events:
       - sqs:
           arn:
             Fn::GetAtt:
               - ConfirmTopicAppointmentQueue
               - Arn
-          batchSize: 3
+          batchSize: 1
   
 resources:
   Resources:
 
-    #AppointmentTopic:
-    #  Type: AWS::SNS::Topic
-    #  Properties:
-    #    TopicName: appointment-scheduling-topic-${self:custom.stage}
+  #SNS de Topicos
+    AppointmentTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: appointment-scheduling-topic-${self:custom.stage}
 
 ################################################
 #           #SQS Topic Perú
 ################################################
+    AppointmentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: appointment
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: appointmentId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: appointmentId
+            KeyType: HASH
+    
     AppointmentQueuePeru:
       Type: AWS::SQS::Queue
       Properties:
@@ -180,7 +215,7 @@ resources:
         VisibilityTimeout: 130
 
 ###############################################
-           #SQS Topic Chile
+           #SQS Confirmación de Appointment
 ###############################################
 
     ConfirmTopicAppointmentQueue:

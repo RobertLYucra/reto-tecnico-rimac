@@ -5,7 +5,7 @@ import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 @Injectable()
 export class SnsService {
     private readonly client: SNSClient;
-    private readonly region = process.env.APP_REGION ||'us-east-2';
+    private readonly region = process.env.APP_REGION || 'us-east-2';
 
     constructor() {
         this.client = new SNSClient({ region: this.region });
@@ -18,6 +18,8 @@ export class SnsService {
         countryISO: 'PE' | 'CL' | string;
         status: string;
         createdAt: string;
+        PK: string,
+        SK: string
     }, snsArn: string) {
         const message = JSON.stringify({
             event: 'APPOINTMENT_ACCEPTED',

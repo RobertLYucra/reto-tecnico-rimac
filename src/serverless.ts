@@ -7,7 +7,9 @@ import { Handler } from 'aws-lambda';
 import { HttpExceptionFilter } from './shared/middlewares/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TopicAppoitmentUseCase } from './modules/appointment/application/topic-appointment.use.case';
-import { PeCreateTopicAppoitmentUseCase } from './modules/appointment-pe/application/peru-create-topic-appointment.use.case';
+import { PeCreateTopicAppoitmentUseCase } from './modules/appointment-peru/application/peru-create-topic-appointment.use.case';
+import { UpdateAppoitmentUseCase } from './modules/appointment/application/update-appointment.usecase';
+import { ClCreateTopicAppoitmentUseCase } from './modules/appointment-chile/application/chile-create-topic-appointment.use.case';
 
 
 let server: Handler;
@@ -76,7 +78,8 @@ export const peruTopicAppointmentHandler: Handler = async (event: any) => {
     for (const record of event.Records) {
       try {
         const payload = JSON.parse(record.body);
-        await eventService.peruTopicAppointment(payload);
+        const { data } = payload;
+        await eventService.peruTopicAppointment(data);
       } catch (error) {
         console.error('Error procesando mensaje del batch:', error.message, record.body);
       }
@@ -90,17 +93,17 @@ export const peruTopicAppointmentHandler: Handler = async (event: any) => {
 };
 
 
-
-
-/* export const chileTopicAppointmentHandler: Handler = async (event: any) => {
+export const chileTopicAppointmentHandler: Handler = async (event: any) => {
   const appContext = await NestFactory.create(AppModule, { logger: false });
-  const eventService = appContext.get(PeruTopicAppoitmentUseCase);
+  const eventService = appContext.get(ClCreateTopicAppoitmentUseCase);
 
   try {
     for (const record of event.Records) {
       try {
         const payload = JSON.parse(record.body);
-        await eventService.peruTopicAppointment(payload);
+        const { data } = payload;
+
+        await eventService.chileTopicAppointment(data);
       } catch (error) {
         console.error('Error procesando mensaje del batch:', error.message, record.body);
       }
@@ -111,14 +114,23 @@ export const peruTopicAppointmentHandler: Handler = async (event: any) => {
   }
 
   return { statusCode: 200, body: 'Processed all records' };
-}; */
+};
 
 export const confirmAppointmentHandler: Handler = async (event) => {
   const appContext = await NestFactory.create(AppModule, { logger: false });
-  const eventService = appContext.get(TopicAppoitmentUseCase);
+  const eventService = appContext.get(UpdateAppoitmentUseCase);
 
-  const record = event.Records[0];
-  const snsMessage = JSON.parse(record.Sns.Message);
+  console.log("Llegó aqui")
 
-  return eventService.topicAppointment(snsMessage);
+  console.log("Evento: ", event)
+
+  for (const record of event.Records) {
+    try {
+      const payload = JSON.parse(record.body);
+      await eventService.updateAppointment(payload);
+    } catch (error) {
+      console.error('Error procesando mensaje del batch:', error.message, record.body);
+    }
+  }
+
 }
