@@ -77,6 +77,6 @@ functions:
     events:
       - http:
           method: ANY
-          path: 'api-platform-auth/{proxy+}'
+          path: 'api-appointment/{proxy+}'
           cors: true
 

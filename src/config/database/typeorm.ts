@@ -2,6 +2,8 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { entities } from './entities.typeorm';
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USERNAME } from 'src/shared/constants/connection.constant';
 
+console.log(DB_HOST)
+
 export const TypeORMConfig: TypeOrmModuleOptions = {
   type: 'mysql',
   host: DB_HOST,
