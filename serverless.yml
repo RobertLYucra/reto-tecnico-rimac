@@ -1,0 +1,82 @@
+service: omnexa-platform-auth-service
+frameworkVersion: '4'
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+  - serverless-prune-plugin
+build:
+  esbuild: false
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  settings:
+    test:
+      region: us-east-2
+      #apiId: jooki0528l
+      #apiRootResourceId: iftwtqaqh9
+      deployBucket: omnichannel-dev-lambda
+      env:
+         DB_HOST: ${env:DB_HOST}
+         DB_PORT: ${env:DB_PORT, '3306'}
+         DB_USERNAME: ${env:DB_USERNAME}
+         DB_PASSWORD: ${env:DB_PASSWORD}
+         DB_NAME: ${env:DB_NAME}
+         SNAP_REGION: ${env:SNAP_REGION, 'us-east-2'}
+         SNAP_BUCKET: ${env:SNAP_BUCKET}
+
+        #PUSHER_APP_ID: ${ssm:snap-api-mailing-pusher-app-id}
+        #PUSHER_KEY: ${ssm:snap-api-mailing-pusher-key}
+        #PUSHER_SECRET: ${ssm:snap-api-mailing-pusher-secret}
+        #PUSHER_CLUSTER: ${ssm:snap-api-mailing-pusher-cluster}
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    platform: node
+   
+      
+    exclude:
+      - aws-sdk
+    target: node18
+    concurrency: 5
+    external:
+      - '@nestjs/microservices'
+      - '@nestjs/websockets'
+      - cache-manager
+      - class-transformer
+    keepNames: true
+    metafile: false
+    treeShaking: true
+  prune:
+    automatic: true
+    number: 1
+provider:
+  name: aws
+  runtime: nodejs20.x
+  memorySize: 2048
+  timeout: 120
+  region: ${self:custom.settings.${self:custom.stage}.region}
+  iam:
+    role: arn:aws:iam::319643186591:role/omnichannel-lambda-access-desa-role
+  deploymentBucket:
+    name: ${self:custom.settings.${self:custom.stage}.deployBucket}
+    serverSideEncryption: AES256
+  #apiGateway:
+  #  restApiId: ${self:custom.settings.${self:custom.stage}.apiId}
+  #  restApiRootResourceId: ${self:custom.settings.${self:custom.stage}.apiRootResourceId}
+  environment: ${self:custom.settings.${self:custom.stage}.env}
+  stackTags:
+    MODULE: platform
+    TASK: platform
+    ENVIRONMENT: test
+    PLATFORM: omnexa
+
+functions:
+  api:
+    handler: dist/serverless.handler
+    events:
+      - http:
+          method: ANY
+          path: 'api-platform-auth/{proxy+}'
+          cors: true
+
