@@ -25,7 +25,7 @@ export class AppointmentController {
         }
     }
 
-    @Get(":appointmentId")
+    @Get("appointmentId/:appointmentId")
     @ApiOperation({ summary: 'Obtener cita por ID' })
     @ApiParam({ name: 'appointmentId', type: String, example: '01K3M2ZPQCE93NHAXTVWZXGDXX' })
     async getApointmentById(@Param("appointmentId") appointmentId: string, @Res() response: Response,) {
@@ -39,7 +39,7 @@ export class AppointmentController {
         }
     }
 
-    @Get(":insureId")
+    @Get("insureId/:insureId")
     @ApiOperation({ summary: 'Obtener cita por InsureId' })
     @ApiParam({ name: 'insureId', type: String, example: '123654' })
     async getApointmentByInsureId(@Param("insureId") insureId: string, @Res() response: Response,) {

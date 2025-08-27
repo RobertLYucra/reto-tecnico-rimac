@@ -59,25 +59,25 @@ export class AppointmentDynamoDSRepository implements AppointmentDynamoRepositor
 
     async getAppointmentsByInsuredId(insuredId: string): Promise<AppointmentDynamoItem[]> {
         try {
-            const pk = `INSURED#${insuredId}`;
             const all: AppointmentDynamoItem[] = [];
             let lastKey: Record<string, any> | undefined;
 
             do {
-                const cmd = new QueryCommand({
+                const cmd = new ScanCommand({
                     TableName: this.tableName,
-                    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+                    FilterExpression: 'insuredId = :insuredId',
                     ExpressionAttributeValues: {
-                        ':pk': { S: pk },
-                        ':sk': { S: 'APPT#' },
+                        ':insuredId': { S: insuredId },   // <--- OBLIGATORIO con cliente de bajo nivel
                     },
-                    ExclusiveStartKey: lastKey,
-                    // ScanIndexForward: false, // descomenta si quieres orden descendente por SK
+                    ExclusiveStartKey: lastKey,          // <- usa el LastEvaluatedKey tal cual (marshalled)
                 });
 
                 const res = await this.client.send(cmd);
+
+                // Con cliente low-level, hay que 'unmarshall' cada item
                 const page = (res.Items ?? []).map(i => unmarshall(i) as AppointmentDynamoItem);
                 all.push(...page);
+
                 lastKey = res.LastEvaluatedKey;
             } while (lastKey);
 

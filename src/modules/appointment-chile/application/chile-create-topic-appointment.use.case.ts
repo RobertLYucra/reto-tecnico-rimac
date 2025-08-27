@@ -23,6 +23,7 @@ export class ClCreateTopicAppoitmentUseCase {
                 status : "COMPLETED"
             }
 
+            //Appoitmentent creado en la base de datps de Chile
             const appointmentCreated = await this.appointmentRepository.createAppointment(appointment)
             if (!appointmentCreated) {
                 console.log("Error al Agendar Cita")

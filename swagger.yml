@@ -1,0 +1,84 @@
+openapi: 3.0.0
+paths:
+  /appointment/createAppointment:
+    post:
+      operationId: AppointmentController_createAppointment
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - Appointment
+  /appointment/appointmentId/{appointmentId}:
+    get:
+      operationId: AppointmentController_getApointmentById
+      parameters:
+        - name: appointmentId
+          required: true
+          in: path
+          schema:
+            example: 01K3M2ZPQCE93NHAXTVWZXGDXX
+            type: string
+      responses:
+        '200':
+          description: ''
+      summary: Obtener cita por ID
+      tags:
+        - Appointment
+  /appointment/insureId/{insureId}:
+    get:
+      operationId: AppointmentController_getApointmentByInsureId
+      parameters:
+        - name: insureId
+          required: true
+          in: path
+          schema:
+            example: '123654'
+            type: string
+      responses:
+        '200':
+          description: ''
+      summary: Obtener cita por InsureId
+      tags:
+        - Appointment
+info:
+  title: API Appointment
+  description: Registro de citas
+  version: '1.0'
+  contact: {}
+tags:
+  - name: appointment
+    description: ''
+servers:
+  - url: http://localhost:3000/test/api-appointment
+  - url: https://nifl6kvezc.execute-api.us-east-2.amazonaws.com/test/api-appointment
+components:
+  schemas:
+    CreateAppointmentDto:
+      type: object
+      properties:
+        insuredId:
+          type: string
+          example: '01234'
+          description: Código del asegurado, exactamente 5 dígitos.
+        scheduleId:
+          type: number
+          example: 100
+          description: Identificador del espacio de agendamiento (scheduleId).
+        countryISO:
+          type: string
+          example: PE
+          description: Código ISO del país. Solo se permite PE o CL.
+          enum:
+            - PE
+            - CL
+      required:
+        - insuredId
+        - scheduleId
+        - countryISO

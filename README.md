@@ -1,73 +1,240 @@
-# Reto Técnico Rimac - API Serverless con NestJS
+# Serverless NestJS API - Appointment Service
 
-Este proyecto implementa una API de agendamiento de citas médicas usando **NestJS**, arquitectura **DDD**, y empaquetado con **Serverless Framework**.  
-Este documento explica únicamente cómo levantar el proyecto en local con `serverless-offline`.
+API de citas médicas desarrollada con NestJS y desplegada usando Serverless Framework.
 
-## 🚀 Requisitos
+## Requisitos Previos
 
-- Node.js v18 o superior  
-- NPM v9 o superior  
-- Serverless Framework instalado globalmente:  
-  ```bash
-  npm install -g serverless
-Docker (opcional, si deseas levantar DynamoDB localmente para pruebas)
+- Node.js (versión 18 o superior)
+- npm o yarn
+- Serverless Framework CLI
+- AWS CLI configurado (para deploy)
 
-📥 Instalación
-bash
-Copiar código
-git clone https://github.com/tu-usuario/reto-tecnico-rimac.git
+## Instalación desde Cero
+
+### 1. Clonación del Repositorio
+
+```bash
+git clone https://github.com/RobertLYucra/reto-tecnico-rimac.git
 cd reto-tecnico-rimac
+```
+
+### 2. Instalación de Dependencias
+
+```bash
 npm install
-⚙️ Variables de entorno
-Crea un archivo .env en la raíz del proyecto con los siguientes valores de ejemplo:
+```
 
-ini
-Copiar código
+### 3. Instalación de Serverless Framework (si no lo tienes)
+
+```bash
+npm install -g serverless
+```
+
+### 4. Configuración de Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+```env
+# Database Configuration
 DB_PORT=3306
-PE_DB_HOST=localhost
-PE_DB_USERNAME=root
-PE_DB_PASSWORD=1234
-PE_DB_NAME=appointment_pe
-
-CL_DB_HOST=localhost
-CL_DB_USERNAME=root
-CL_DB_PASSWORD=1234
-CL_DB_NAME=appointment_cl
-
 APP_REGION=us-east-2
-APPOINTMENT_TABLE_NAME=appointment
-SNS_TOPIC_ARN=arn:aws:sns:us-east-2:000000000000:appointment-scheduling-topic
-▶️ Levantar el proyecto en local
-bash
-Copiar código
+
+# Peru Database
+PE_DB_HOST= **************
+PE_DB_USERNAME=**************
+PE_DB_PASSWORD=**************
+PE_DB_NAME =tp_appointment_pe
+
+# Chile Database  
+CL_DB_HOST=**************
+CL_DB_USERNAME=**************
+CL_DB_PASSWORD=**************
+CL_DB_NAME=tp_appointment_cl
+```
+
+## Desarrollo Local
+
+### Levantar el Proyecto en Modo Offline
+
+```bash
 serverless offline --stage test
-La API quedará disponible en:
+```
 
-http://localhost:3000/test/api-appointment
+El servidor se levantará por defecto en: `http://localhost:3000`
 
-📚 Documentación Swagger
-Swagger UI: http://localhost:3000/swagger
+Y la función principal estará en:  `http://localhost:3000/test/api-appointment/{proxy*}`
 
-Swagger JSON: http://localhost:3000/swagger-json
+### Ejecutar Tests
 
-🧪 Probar la API en local
-Crear cita
-bash
-Copiar código
-curl -X POST http://localhost:3000/test/api-appointment/appointment/createAppointment \
-  -H "Content-Type: application/json" \
-  -d '{"insuredId":"01234","scheduleId":100,"countryISO":"PE"}'
-Obtener cita por ID
-bash
-Copiar código
-curl http://localhost:3000/test/api-appointment/appointment/A1
-Obtener citas por asegurado
-bash
-Copiar código
-curl http://localhost:3000/test/api-appointment/appointment/INSURED#01234
-✅ Notas
-La base de datos en local puede simularse con DynamoDB Local + MySQL en Docker, o conectarse a instancias reales en AWS.
+#### Tests End-to-End
+```bash
+npm run test:e2e
+```
 
-Todos los handlers (api, appointmentTopic, peruTopicAppointmentHandler, chileTopicAppointmentHandler, confirmAppointmentHandler) están listos para ejecutarse con serverless-offline.
+## Documentación de la API
 
-El endpoint de Swagger incluye servidores tanto locales como de AWS (localhost:3000/test/api-appointment y execute-api...amazonaws.com/test/api-appointment).
+### Swagger UI
+Una vez levantado el proyecto, puedes acceder a la documentación interactiva en:
+
+```
+{{host}}/test/api-appointment/swagger
+```
+
+**Ejemplo local:** `http://localhost:3000/test/api-appointment/swagger`
+
+### Swagger JSON
+Para obtener la especificación OpenAPI en formato JSON:
+
+```
+{{host}}/test/api-appointment/swagger-json
+```
+
+**Ejemplo local:** `http://localhost:3000/test/api-appointment/swagger-json`
+
+## Deployment
+
+### Deploy a AWS
+
+Para hacer deploy a AWS, simplemente ejecuta:
+
+```bash
+serverless deploy --stage test
+```
+
+El stage `test` se mantiene tanto para desarrollo local como para deployment.
+
+### Deploy a Otros Stages
+
+Si necesitas deploy a otros ambientes:
+Pero será necesario configurar en serverless.yml
+para los demás ambientes
+
+```bash
+# Producción
+serverless deploy --stage prod
+
+# Desarrollo
+serverless deploy --stage dev
+```
+
+### Remover Deployment
+
+Para eliminar completamente el stack de AWS:
+
+```bash
+serverless remove --stage test
+```
+
+## Estructura del Proyecto
+
+```
+src/
+├── config/                    # Configuración de la aplicación
+├── modules/
+│   ├── appointment/           # Módulo principal de citas
+│   │   ├── application/       # Casos de uso
+│   │   ├── domain/           # Entidades, DTOs y repositorios
+│   │   └── infrastructure/   # Controladores, módulos y data sources
+│   ├── appointment-chile/     # Módulo específico para Chile
+│   │   ├── application/
+│   │   ├── domain/
+│   │   └── infrastructure/
+│   └── appointment-peru/      # Módulo específico para Perú
+│       ├── application/
+│       ├── domain/
+│       └── infrastructure/
+├── shared/
+│   ├── aws/                   # Servicios de AWS (SNS, EventBridge)
+│   ├── constants/             # Constantes de la aplicación
+│   └── dto/                   # DTOs compartidos
+├── app.module.ts              # Módulo principal
+├── main.ts                   # Punto de entrada
+└── serverless.ts             # Configuración serverless
+test/                          # Tests E2E y unitarios
+├── *.spec.ts                 # Tests unitarios
+└── jest.setup.ts             # Configuración de mocks
+```
+
+## Scripts Disponibles
+
+```bash
+# Desarrollo
+npm run start:dev              # Modo desarrollo con hot-reload
+npm run build                  # Compilar el proyecto
+npm run start:prod             # Ejecutar en modo producción
+
+# Testing
+npm run test                   # Tests unitarios
+npm run test:watch             # Tests en modo watch
+npm run test:coverage          # Tests con cobertura
+npm run test:e2e              # Tests end-to-end
+
+# Linting
+npm run lint                   # Ejecutar linter
+npm run lint:fix              # Corregir errores de linting automáticamente
+```
+
+## Variables de Entorno Requeridas
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `DB_PORT` | Puerto de la base de datos | `3306` |
+| `APP_REGION` | Región de AWS | `us-east-2` |
+| `PE_DB_HOST` | Host de la BD de Perú | ``***********`` |
+| `PE_DB_USERNAME` | Usuario de la BD de Perú | `user_soporte` |
+| `PE_DB_PASSWORD` | Contraseña de la BD de Perú | `s0p0rt3.` |
+| `PE_DB_NAME` | Nombre de la BD de Perú | `tp_appointment_pe` |
+| `CL_DB_HOST` | Host de la BD de Chile | ``***********`` |
+| `CL_DB_USERNAME` | Usuario de la BD de Chile | `user_soporte` |
+| `CL_DB_PASSWORD` | Contraseña de la BD de Chile | `s0p0rt3.` |
+| `CL_DB_NAME` | Nombre de la BD de Chile | `tp_appointment_cl` |
+
+## Endpoints Principales
+
+### Crear Cita
+```http
+POST /test/api-appointment/appointment/createAppointment
+Content-Type: application/json
+
+{
+  "insuredId": "string",
+  "scheduleId": number,
+  "countryISO": "string"
+}
+```
+
+### Obtener Citas por InsureId
+```http
+GET /test/api-appointment/appointment/insureId/{insureId}
+```
+
+
+### Obtener Cita por ID
+```http
+GET /test/api-appointment/appointment/appointmentId/{appointmentId}
+```
+
+## Troubleshooting
+
+### Problemas Comunes
+
+1. **Error de conexión a BD**: Verificar que las variables de entorno estén correctamente configuradas
+2. **Puerto ocupado**: El puerto 3000 está en uso, cambiar en `serverless.yml` o cerrar el proceso
+3. **Permisos de AWS**: Asegurarse de que las credenciales de AWS estén configuradas correctamente
+
+### Logs en Desarrollo Local
+
+```bash
+serverless offline --stage test --verbose
+```
+
+### Logs en AWS
+
+```bash
+serverless logs -f main --stage test --tail
+```
+
+
+## Contacto
+
+Para soporte técnico o preguntas, contactas con robertlyucra@gmail.com
