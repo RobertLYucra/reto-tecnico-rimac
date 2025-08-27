@@ -31,4 +31,13 @@ export class GetAppointmentUseCase {
             throw new Error(error.message)
         }
     }
+
+    async getAppointmentsByScheduleId(scheduleId: number): Promise<AppointmentResponseDto[]> {
+        try {
+            const appointmentList = await this.appointmentDynamoRepository.getAppointmentsByScheduleId(scheduleId)
+            return appointmentList.map(appointment => AppointmentMapping(appointment))
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
 }

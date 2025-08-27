@@ -33,6 +33,12 @@ npm install -g serverless
 No se trabajó en RDS por limitaciones, se trabajó en MySQL en otro host
 y las estructuras de las tablas está en la riz del proyecto.
 
+Para Hacer pruebas, se valida el Schedule en cada pais (Cada basde de datos)
+ 
+-  Para Peru ID disponibles: 100, 101,102
+-  Para Chile ID disponibles: 200, 201,202
+
+
 - tp_appointment_cl.sql
 - tp_appointment_pe.sql
 
@@ -212,13 +218,19 @@ Content-Type: application/json
 
 ### Obtener Citas por InsureId
 ```http
-GET /test/api-appointment/appointment/insureId/{insureId}
+GET /test/api-appointment/appointment/getByinsureId/{appointmentId}
 ```
 
 
 ### Obtener Cita por ID
 ```http
-GET /test/api-appointment/appointment/appointmentId/{appointmentId}
+GET /test/api-appointment/appointment/getByAppointmentId/{appointmentId}
+```
+
+
+### Obtener Cita por ScheduleId
+```http
+GET /test/api-appointment/appointment/getByScheduleId/{appointmentId}
 ```
 
 ## Troubleshooting

@@ -88,6 +88,38 @@ export class AppointmentDynamoDSRepository implements AppointmentDynamoRepositor
         }
     }
 
+    async getAppointmentsByScheduleId(scheduleId: number): Promise<AppointmentDynamoItem[]> {
+        try {
+            const all: AppointmentDynamoItem[] = [];
+            let lastKey: Record<string, any> | undefined;
+
+            do {
+                const cmd = new ScanCommand({
+                    TableName: this.tableName,
+                    FilterExpression: 'scheduleId = :scheduleId',
+                    ExpressionAttributeValues: {
+                        ':scheduleId': { N: scheduleId.toString() },
+                    },
+                    ExclusiveStartKey: lastKey,
+                });
+
+                const res = await this.client.send(cmd);
+
+                console.log("Hola: ", cmd)
+                // Con cliente low-level, hay que 'unmarshall' cada item
+                const page = (res.Items ?? []).map(i => unmarshall(i) as AppointmentDynamoItem);
+                all.push(...page);
+
+                lastKey = res.LastEvaluatedKey;
+            } while (lastKey);
+
+            return all;
+        } catch (error) {
+            console.error('Error in getAppointmentsByInsuredId:', error);
+            throw error;
+        }
+    }
+
     async createAppointmentDynamo(item: AppointmentDynamoItem): Promise<AppointmentDynamoItem> {
         await this.client.send(
             new PutItemCommand({

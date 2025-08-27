@@ -6,4 +6,5 @@ export interface AppointmentDynamoRepository {
     updateStatusByAppointmentId(appointmentId: string, newStatus: string, completedAt?: string)
     getAppointmentById(appointmentId: string): Promise<AppointmentDynamoItem | null>
     getAppointmentsByInsuredId(insuredId: string): Promise<AppointmentDynamoItem[]>
+    getAppointmentsByScheduleId(scheduleId: number): Promise<AppointmentDynamoItem[]>
 }

@@ -25,4 +25,7 @@ export class AppointmentResponseDto {
     @ApiProperty({ example: '2025-08-26T21:01:47.114Z' })
     @IsISO8601()
     createdAt: string;
+
+    @ApiProperty({ example: 'PE' })
+    countryISO: string
 }

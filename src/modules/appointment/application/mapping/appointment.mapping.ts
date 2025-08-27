@@ -11,5 +11,6 @@ export function AppointmentMapping(
         scheduleId: item.scheduleId,
         status: item.status,
         createdAt: item.createdAt,
+        countryISO : item.countryISO
     };
 }

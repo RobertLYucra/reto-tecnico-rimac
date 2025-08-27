@@ -25,7 +25,7 @@ export class AppointmentController {
         }
     }
 
-    @Get("appointmentId/:appointmentId")
+    @Get("getByAppointmentId/:appointmentId")
     @ApiOperation({ summary: 'Obtener cita por ID' })
     @ApiParam({ name: 'appointmentId', type: String, example: '01K3M2ZPQCE93NHAXTVWZXGDXX' })
     async getApointmentById(@Param("appointmentId") appointmentId: string, @Res() response: Response,) {
@@ -39,7 +39,7 @@ export class AppointmentController {
         }
     }
 
-    @Get("insureId/:insureId")
+    @Get("getByinsureId/:insureId")
     @ApiOperation({ summary: 'Obtener cita por InsureId' })
     @ApiParam({ name: 'insureId', type: String, example: '123654' })
     async getApointmentByInsureId(@Param("insureId") insureId: string, @Res() response: Response,) {
@@ -47,6 +47,20 @@ export class AppointmentController {
 
             const appointmentsList = await this.getAppointmentUseCase.getAppointmentsByInsuredId(insureId)
             return response.status(200).json(new ResponseDto(true, 'Lista de Appointments por InsureID', appointmentsList));
+
+        } catch (error) {
+            return response.status(400).json(new ResponseDto(false, error.message));
+        }
+    }
+
+    @Get("getByScheduleId/:scheduleId")
+    @ApiOperation({ summary: 'Obtener cita por scheduleId' })
+    @ApiParam({ name: 'scheduleId', type: String, example: 100 })
+    async getApointmentByScheduleId(@Param("scheduleId") scheduleId: number, @Res() response: Response,) {
+        try {
+
+            const appointmentsList = await this.getAppointmentUseCase.getAppointmentsByScheduleId(scheduleId)
+            return response.status(200).json(new ResponseDto(true, 'Lista de Appointments por scheduleId', appointmentsList));
 
         } catch (error) {
             return response.status(400).json(new ResponseDto(false, error.message));
