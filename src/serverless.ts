@@ -31,7 +31,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('appointment')
     .addServer("http://localhost:3000/test/api-appointment")
-    .addServer('https://swti23y871.execute-api.us-east-2.amazonaws.com/test/api-appointment')
+    .addServer('https://y8vea5ly72.execute-api.us-east-2.amazonaws.com/test/api-appointment')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

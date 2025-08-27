@@ -57,7 +57,7 @@ tags:
     description: ''
 servers:
   - url: http://localhost:3000/test/api-appointment
-  - url: https://nifl6kvezc.execute-api.us-east-2.amazonaws.com/test/api-appointment
+  - url: https://y8vea5ly72.execute-api.us-east-2.amazonaws.com/test/api-appointment
 components:
   schemas:
     CreateAppointmentDto:
