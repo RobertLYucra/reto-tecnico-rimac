@@ -29,8 +29,15 @@ npm install
 ```bash
 npm install -g serverless
 ```
+### 4. Base de Datos MySQL
+No se trabajó en RDS por limitaciones, se trabajó en MySQL en otro host
+y las estructuras de las tablas está en la riz del proyecto.
 
-### 4. Configuración de Variables de Entorno
+- tp_appointment_cl.sql
+- tp_appointment_pe.sql
+
+
+### 5. Configuración de Variables de Entorno
 
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 

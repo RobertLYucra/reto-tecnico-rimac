@@ -9,7 +9,7 @@ import { AppointmentChileModule } from './modules/appointment-chile/infraestruct
 @Module({
   imports: [
     TypeOrmModule.forRoot(PeruTypeORMConfig), // conexión PE
-    TypeOrmModule.forRoot(ChileTypeORMConfig),
+    TypeOrmModule.forRoot(ChileTypeORMConfig),// conexión CL
     AppointmentModule,
     AppointmentPeruModule,
     AppointmentChileModule
