@@ -7,22 +7,23 @@ import { SqsService } from "src/shared/aws/sqs.service";
 import { SnsService } from "src/shared/aws/sns.service";
 import { TopicAppoitmentUseCase } from "../application/topic-appointment.use.case";
 import { UpdateAppoitmentUseCase } from "../application/update-appointment.usecase";
-import { AppoitmentPEModule } from "src/modules/appointment-peru/infraestructure/appointment-pe.module";
 import { GetAppointmentUseCase } from "../application/get-appointment.use.case";
+import { AppointmentChileModule } from "src/modules/appointment-chile/infraestructure/appointment-chile.module";
+import { AppointmentPeruModule } from "src/modules/appointment-peru/infraestructure/appointment-peru.module";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([]),
-        AppoitmentPEModule
+        AppointmentPeruModule,
+        AppointmentChileModule
     ],
     controllers: [AppointmentController],
     providers: [
-        CreateAppoitmentUseCase,
         {
             useClass: AppointmentDynamoDSRepository,
             provide: "AppointmentDynamoRepository"
         },
-
+        CreateAppoitmentUseCase,
         SnsService,
         SqsService,
         TopicAppoitmentUseCase,
@@ -31,4 +32,4 @@ import { GetAppointmentUseCase } from "../application/get-appointment.use.case";
     ],
     exports: [TypeOrmModule],
 })
-export class AppoitmentModule { }
+export class AppointmentModule { }

@@ -18,6 +18,7 @@ export class AppointmentController {
     async createAppointment(@Body() params: CreateAppointmentDto, @Res() response: Response,) {
         try {
             const appointmentCreated = await this.createAppointmentUseCase.createAppointment(params)
+
             return response.status(200).json(new ResponseDto(true, 'Appointment Creado correctamente', appointmentCreated));
         } catch (error) {
             return response.status(400).json(new ResponseDto(false, error.message));
@@ -30,8 +31,22 @@ export class AppointmentController {
     async getApointmentById(@Param("appointmentId") appointmentId: string, @Res() response: Response,) {
         try {
 
-            const appointmentFound = await this.getAppointmentUseCase.getAppointById(appointmentId)
-            return response.status(200).json(new ResponseDto(true, 'Cita encontrado', appointmentFound));
+            const appointmentsFound = await this.getAppointmentUseCase.getAppointById(appointmentId)
+            return response.status(200).json(new ResponseDto(true, 'Cita encontrado', appointmentsFound));
+
+        } catch (error) {
+            return response.status(400).json(new ResponseDto(false, error.message));
+        }
+    }
+
+    @Get(":insureId")
+    @ApiOperation({ summary: 'Obtener cita por InsureId' })
+    @ApiParam({ name: 'insureId', type: String, example: '123654' })
+    async getApointmentByInsureId(@Param("insureId") insureId: string, @Res() response: Response,) {
+        try {
+
+            const appointmentsList = await this.getAppointmentUseCase.getAppointmentsByInsuredId(insureId)
+            return response.status(200).json(new ResponseDto(true, 'Lista de Appointments por InsureID', appointmentsList));
 
         } catch (error) {
             return response.status(400).json(new ResponseDto(false, error.message));

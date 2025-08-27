@@ -11,7 +11,7 @@ export interface AppointmentDynamoItem {
   status: Status;
   createdAt: string;        // ISO
   updatedAt: string;        // ISO
-
+  deleted: boolean
   // Extras opcionales (auditoría/UX)
   specialtyId?: number;
   slot?: { date: string; start: string; end: string };

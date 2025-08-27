@@ -5,8 +5,10 @@ plugins:
   - serverless-esbuild
   - serverless-offline
   - serverless-prune-plugin
+  
 build:
   esbuild: false
+  
 custom:
   stage: ${opt:stage, self:provider.stage}
   settings:
@@ -106,7 +108,6 @@ functions:
           path: 'api-appointment/{proxy+}'
           cors: true
 
-  
   #Logica para ejecutar SQS de Peru o Chile
    
   appointment-topic:

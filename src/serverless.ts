@@ -26,10 +26,10 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('API Analytics')
-    .setDescription('Report, Dashboards, etc')
+    .setTitle('API Appointment')
+    .setDescription('Registro de citas')
     .setVersion('1.0')
-    .addTag('analytics')
+    .addTag('appointment')
     .addServer("http://localhost:3000/test/api-appointment")
     .addServer('https://swti23y871.execute-api.us-east-2.amazonaws.com/test/api-appointment')
     .build();
@@ -120,14 +120,10 @@ export const confirmAppointmentHandler: Handler = async (event) => {
   const appContext = await NestFactory.create(AppModule, { logger: false });
   const eventService = appContext.get(UpdateAppoitmentUseCase);
 
-  console.log("Llegó aqui")
-
-  console.log("Evento: ", event)
-
   for (const record of event.Records) {
     try {
       const payload = JSON.parse(record.body);
-      await eventService.updateAppointment(payload);
+      await eventService.updateAppointment(payload.detail);
     } catch (error) {
       console.error('Error procesando mensaje del batch:', error.message, record.body);
     }

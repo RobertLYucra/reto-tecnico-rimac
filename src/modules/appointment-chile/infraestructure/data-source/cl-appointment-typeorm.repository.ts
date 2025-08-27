@@ -3,12 +3,15 @@ import { ClAppointmentRepository } from "../../domain/repository/cl-appointment.
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AppointmentChileEntity } from "../../domain/entities/appointment-chile.entity";
+import { ScheduleChileEntity } from "../../domain/entities/scheduled-chile.entity";
 
 @Injectable()
 export class ClAppointmentTypeOrmRepository implements ClAppointmentRepository {
     constructor(
         @InjectRepository(AppointmentChileEntity, 'CL')
         private readonly appointmentRepository: Repository<AppointmentChileEntity>,
+        @InjectRepository(ScheduleChileEntity, 'CL')
+        private readonly scheduleRepository: Repository<ScheduleChileEntity>,
     ) { }
 
     async createAppointment(appointmentEntity: Partial<AppointmentChileEntity>): Promise<AppointmentChileEntity | null> {
@@ -27,7 +30,7 @@ export class ClAppointmentTypeOrmRepository implements ClAppointmentRepository {
         }
     }
 
-    async getScheduledById(scheduleId: number): Promise<AppointmentChileEntity | null> {
-        return await this.appointmentRepository.findOne({ where: { scheduleId: scheduleId } })
+    async getScheduledById(scheduleId: number): Promise<ScheduleChileEntity | null> {
+        return await this.scheduleRepository.findOne({ where: { scheduleId: scheduleId } })
     }
 }

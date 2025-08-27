@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { ChileTypeORMConfig } from './config/chile-database/chile-typeorm';
 import { PeruTypeORMConfig } from './config/peru-database/peru-typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppoitmentModule } from './modules/appointment/infraestructure/appointment.module';
-import { AppoitmentPEModule } from './modules/appointment-peru/infraestructure/appointment-pe.module';
-import { AppoitmentClModule } from './modules/appointment-chile/infraestructure/appointment-cl.module';
+import { AppointmentModule } from './modules/appointment/infraestructure/appointment.module';
+import { AppointmentPeruModule } from './modules/appointment-peru/infraestructure/appointment-peru.module';
+import { AppointmentChileModule } from './modules/appointment-chile/infraestructure/appointment-chile.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(PeruTypeORMConfig), // conexión PE
     TypeOrmModule.forRoot(ChileTypeORMConfig),
-    AppoitmentModule,
-    AppoitmentPEModule,
-    AppoitmentClModule
+    AppointmentModule,
+    AppointmentPeruModule,
+    AppointmentChileModule
   ],
   controllers: [],
   providers: [],

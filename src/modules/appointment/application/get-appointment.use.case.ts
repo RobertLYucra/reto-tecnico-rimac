@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { AppointmentDynamoRepository } from "../domain/repositories/appointment-dynamo.repository";
 import { AppointmentResponseDto } from "../domain/dto/response/appointment.response.dto";
 import { AppointmentMapping } from "./mapping/appointment.mapping";
+import { appointmentTopic } from "src/serverless";
 
 @Injectable()
 export class GetAppointmentUseCase {
@@ -17,6 +18,15 @@ export class GetAppointmentUseCase {
             if (!appointmentFound) throw new Error("Cita no encontrado")
 
             return AppointmentMapping(appointmentFound)
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
+    async getAppointmentsByInsuredId(insuredId: string): Promise<AppointmentResponseDto[]> {
+        try {
+            const appointmentList = await this.appointmentDynamoRepository.getAppointmentsByInsuredId(insuredId)
+            return appointmentList.map(appointment => AppointmentMapping(appointment))
         } catch (error) {
             throw new Error(error.message)
         }

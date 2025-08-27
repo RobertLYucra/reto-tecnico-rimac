@@ -8,6 +8,7 @@ import { SNS_TOPIC_ARN } from "src/shared/constants/connection.constant";
 import { GetPeTopicAppoitmentUseCase } from "src/modules/appointment-peru/application/get-peru-appointments.use.case";
 import { AppointmentResponseDto } from "../domain/dto/response/appointment.response.dto";
 import { AppointmentMapping as AppointmentMapping } from "./mapping/appointment.mapping";
+import { GetClTopicAppoitmentUseCase } from "src/modules/appointment-chile/application/get-chile-appointments.use.case";
 
 @Injectable()
 export class CreateAppoitmentUseCase {
@@ -19,13 +20,30 @@ export class CreateAppoitmentUseCase {
         @Inject('AppointmentDynamoRepository')
         private readonly appointmentDynamoRepository: AppointmentDynamoRepository,
         private readonly snsService: SnsService,
-        private readonly getPeTopicAppoitmentUseCase: GetPeTopicAppoitmentUseCase
+        private readonly getPeTopicAppoitmentUseCase: GetPeTopicAppoitmentUseCase,
+        private readonly getClTopicAppoitmentUseCase: GetClTopicAppoitmentUseCase
     ) { }
 
     async createAppointment(appointmentParams: CreateAppointmentDto): Promise<AppointmentResponseDto> {
         try {
 
-            const scheduleFound = await this.getPeTopicAppoitmentUseCase.getPeruTopicAppointmentById(+appointmentParams.scheduleId)
+
+            const country = (appointmentParams.countryISO || '').toUpperCase();
+            if (country !== 'PE' && country !== 'CL') {
+                throw new Error('País no soportado (use PE o CL)');
+            }
+
+            const scheduleId = Number(appointmentParams.scheduleId);
+            if (!Number.isFinite(scheduleId)) {
+                throw new Error('scheduleId inválido');
+            }
+
+            //Buscamos si la programación con ese Id Existe
+            const findSchedule = country === 'PE'
+                ? (id: number) => this.getPeTopicAppoitmentUseCase.getPeruTopicAppointmentById(id)
+                : (id: number) => this.getClTopicAppoitmentUseCase.getChileTopicAppointmentById(id);
+            const scheduleFound = await findSchedule(scheduleId);
+
             if (!scheduleFound) throw new Error("Programación no existe o fue eliminado")
 
             const now = new Date().toISOString();
@@ -46,13 +64,15 @@ export class CreateAppoitmentUseCase {
                     ? scheduleFound.date.toISOString()
                     : String(scheduleFound.date),
                 medicId: scheduleFound.medicId,
-                specialtyId: scheduleFound.specialtyId
+                specialtyId: scheduleFound.specialtyId,
+                deleted: false
             };
 
-
+            //Creando appointment en DynamoDb - appoitment
             const appointmentCreated = await this.appointmentDynamoRepository.createAppointmentDynamo(item);
             if (!appointmentCreated) throw new Error("No se pudo crear la Cita")
 
+            //Publicnado en SNS
 
             await this.snsService.publishAppointmentAccepted({
                 appointmentId: appointmentCreated.appointmentId,

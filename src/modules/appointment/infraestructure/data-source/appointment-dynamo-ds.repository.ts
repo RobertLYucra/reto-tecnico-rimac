@@ -1,6 +1,6 @@
 // src/infrastructure/dynamo/appointment-dynamo.repository.ts
 import { Injectable } from '@nestjs/common';
-import { DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb"
+import { DynamoDBClient, GetItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb"
 import { AppointmentDynamoItem } from '../../domain/entities/appointment-dynamo-item';
 import { APP_REGION, APPOINTMENT_TABLE_NAME } from 'src/shared/constants/connection.constant';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
@@ -40,7 +40,7 @@ export class AppointmentDynamoDSRepository implements AppointmentDynamoRepositor
             const command = new GetItemCommand({
                 TableName: this.tableName,
                 Key: {
-                    appointmentId: { S: appointmentId },   // 👈 tu PK
+                    appointmentId: { S: appointmentId },
                 },
             });
 
@@ -53,6 +53,37 @@ export class AppointmentDynamoDSRepository implements AppointmentDynamoRepositor
             return null;
         } catch (error) {
             console.error("Error in getById:", error);
+            throw error;
+        }
+    }
+
+    async getAppointmentsByInsuredId(insuredId: string): Promise<AppointmentDynamoItem[]> {
+        try {
+            const pk = `INSURED#${insuredId}`;
+            const all: AppointmentDynamoItem[] = [];
+            let lastKey: Record<string, any> | undefined;
+
+            do {
+                const cmd = new QueryCommand({
+                    TableName: this.tableName,
+                    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+                    ExpressionAttributeValues: {
+                        ':pk': { S: pk },
+                        ':sk': { S: 'APPT#' },
+                    },
+                    ExclusiveStartKey: lastKey,
+                    // ScanIndexForward: false, // descomenta si quieres orden descendente por SK
+                });
+
+                const res = await this.client.send(cmd);
+                const page = (res.Items ?? []).map(i => unmarshall(i) as AppointmentDynamoItem);
+                all.push(...page);
+                lastKey = res.LastEvaluatedKey;
+            } while (lastKey);
+
+            return all;
+        } catch (error) {
+            console.error('Error in getAppointmentsByInsuredId:', error);
             throw error;
         }
     }

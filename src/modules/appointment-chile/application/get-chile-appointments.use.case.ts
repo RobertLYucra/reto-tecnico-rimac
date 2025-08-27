@@ -10,7 +10,7 @@ export class GetClTopicAppoitmentUseCase {
         private readonly appointmentRepository: ClAppointmentRepository,
     ) { }
 
-    async getPeruTopicAppointmentById(scheduleId: number) {
+    async getChileTopicAppointmentById(scheduleId: number) {
         return this.appointmentRepository.getScheduledById(scheduleId)
     }
 }

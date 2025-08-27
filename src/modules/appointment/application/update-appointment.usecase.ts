@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { SnsService } from "src/shared/aws/sns.service";
 import { AppointmentDynamoRepository } from "../domain/repositories/appointment-dynamo.repository";
+import { AppointmentUpdateEvent } from "../domain/dto/update-appointment.dto";
 
 @Injectable()
 export class UpdateAppoitmentUseCase {
@@ -12,12 +13,12 @@ export class UpdateAppoitmentUseCase {
 
     ) { }
 
-    async updateAppointment(appointmentParams: any): Promise<void> {
+    async updateAppointment(appointmentParams: AppointmentUpdateEvent): Promise<void> {
         try {
 
             console.log("Event: ", appointmentParams)
 
-            const { appointmentId, insuredId, countryISO, status, scheduleId } = appointmentParams.detail
+            const { appointmentId, insuredId, countryISO, status, scheduleId } = appointmentParams
 
             const now = new Date().toISOString();
 
