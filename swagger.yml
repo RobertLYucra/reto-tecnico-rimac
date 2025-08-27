@@ -15,7 +15,7 @@ paths:
           description: ''
       tags:
         - Appointment
-  /appointment/appointmentId/{appointmentId}:
+  /appointment/getByAppointmentId/{appointmentId}:
     get:
       operationId: AppointmentController_getApointmentById
       parameters:
@@ -31,7 +31,7 @@ paths:
       summary: Obtener cita por ID
       tags:
         - Appointment
-  /appointment/insureId/{insureId}:
+  /appointment/getByinsureId/{insureId}:
     get:
       operationId: AppointmentController_getApointmentByInsureId
       parameters:
@@ -45,6 +45,22 @@ paths:
         '200':
           description: ''
       summary: Obtener cita por InsureId
+      tags:
+        - Appointment
+  /appointment/getByScheduleId/{scheduleId}:
+    get:
+      operationId: AppointmentController_getApointmentByScheduleId
+      parameters:
+        - name: scheduleId
+          required: true
+          in: path
+          schema:
+            example: 100
+            type: string
+      responses:
+        '200':
+          description: ''
+      summary: Obtener cita por scheduleId
       tags:
         - Appointment
 info:
