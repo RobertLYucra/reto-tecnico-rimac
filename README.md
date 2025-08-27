@@ -35,8 +35,7 @@ y las estructuras de las tablas está en la riz del proyecto.
 
 Para Hacer pruebas, se valida el Schedule en cada pais (Cada basde de datos)
  
--  Para Peru ID disponibles: 100, 101,102
--  Para Chile ID disponibles: 200, 201,202
+-  Para Schedule ID disponibles: 100, 101,102,103,104,105
 
 
 - tp_appointment_cl.sql

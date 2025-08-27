@@ -44,7 +44,7 @@ export class CreateAppoitmentUseCase {
                 : (id: number) => this.getClTopicAppoitmentUseCase.getChileTopicAppointmentById(id);
             const scheduleFound = await findSchedule(scheduleId);
 
-            if (!scheduleFound) throw new Error("Programación no existe o fue eliminado")
+            if (!scheduleFound) throw new Error(`Programación ${scheduleId} no existe o fue eliminado en ${appointmentParams.countryISO === "PE" ? "Perú" : "Chile"}`)
 
             const now = new Date().toISOString();
 
