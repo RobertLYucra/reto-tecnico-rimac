@@ -24,7 +24,7 @@ export class UpdateAppoitmentUseCase {
 
             await this.appointmentDynamoRepository.updateStatusByAppointmentId(
                 appointmentId,
-                (status || '').toUpperCase() === 'COMPLETED' ? 'CONFIRMED' : status.toUpperCase(), now);
+                (status || '').toUpperCase() === 'COMPLETED' ? 'COMPLETED' : status.toUpperCase(), now);
 
         } catch (error) {
             throw new Error(error.message)

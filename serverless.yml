@@ -165,12 +165,12 @@ resources:
         TopicName: appointment-scheduling-topic-${self:custom.stage}
 
 ################################################
-#           #SQS Topic Perú
+#           #DynamoDB tabla appointment
 ################################################
     AppointmentTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: appointment
+        TableName: ${self:custom.settings.${self:custom.stage}.env.APPOINTMENT_TABLE_NAME}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: appointmentId
@@ -178,7 +178,9 @@ resources:
         KeySchema:
           - AttributeName: appointmentId
             KeyType: HASH
-    
+################################################
+#           #SQS Topic Perú
+################################################    
     AppointmentQueuePeru:
       Type: AWS::SQS::Queue
       Properties:
