@@ -1,6 +1,6 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { UpdateAppoitmentUseCase } from './update-appointment.usecase';
+import { UpdateAppoitmentUseCase } from 'src/modules/appointment/application/update-appointment.usecase';
 
 
 describe('UpdateAppoitmentUseCase', () => {

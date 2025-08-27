@@ -1,9 +1,14 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "preset": "ts-jest",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+
+  "rootDir": "..",
+  "roots": ["<rootDir>/test"],
+  "testMatch": ["**/*.e2e-spec.ts", "**/*.usecase.e2e-spec.ts", "**/*.usecase.spec.ts"],
+
+  "transform": { "^.+\\.ts$": "ts-jest" },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1"
+  },
+  "moduleFileExtensions": ["ts", "js", "json"]
 }

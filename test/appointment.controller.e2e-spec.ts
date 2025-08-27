@@ -1,10 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
-import { Status } from "../../domain/entities/appointment-dynamo-item"
-import { AppointmentController } from './appointment.controller';
-import { CreateAppoitmentUseCase } from '../../application/create-appoitment.use.case';
-import { GetAppointmentUseCase } from '../../application/get-appointment.use.case';
-import { ResponseDto } from '../../../../shared/dto/response.dto';
+import { CreateAppoitmentUseCase } from 'src/modules/appointment/application/create-appoitment.use.case';
+import { GetAppointmentUseCase } from 'src/modules/appointment/application/get-appointment.use.case';
+import { AppointmentController } from 'src/modules/appointment/infraestructure/controller/appointment.controller';
+import { ResponseDto } from 'src/shared/dto/response.dto';
 
 describe('AppointmentController', () => {
     let controller: AppointmentController;
